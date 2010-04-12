@@ -1,0 +1,2 @@
+#!/bin/sh
+exec rlwrap -r -b "(){}[],+=^#;|&%" im_cmd "$@"

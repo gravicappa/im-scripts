@@ -1,0 +1,40 @@
+#!/bin/sh
+
+root="$HOME/irc"
+action="open"
+tmppath="/tmp"
+timestamp="$tmppath/im_timestamp"
+
+for a; do
+  case $a in
+    -o) action='open'; shift;;
+    -s) action='show'; shift;;
+  esac
+done
+
+dir=${1:-$HOME/irc}
+
+msg="\n## %s:\n"
+
+[ -f "$timestamp" ] || touch "$timestamp"
+
+for i in `find "$dir" -mindepth 2 -newer "$timestamp" -name 'out'`; do
+  # if file doesn't contain server stuff only
+  if grep -v -q '\-!\-' $i  > /dev/null 2>&1 ; then
+    case $action in
+      open) 
+        im "`dirname "$i"`" 
+        ;;
+      show)
+        codepage='utf-8'
+        [ -f "`dirname "$i"`/../rc" ] && . "`dirname "$i"`/../rc"
+        [ -f "`dirname "$i"`/rc" ] && . "`dirname "$i"`/rc"
+        printf "$msg" "$i"
+        tail -5 $i | iconv -f $codepage | grep -v -e '-!-'
+        ;;
+    esac
+    echo "---"
+  fi
+done
+
+touch "$timestamp"
