@@ -4,6 +4,7 @@ root="$HOME/irc"
 action="open"
 tmppath="/tmp"
 timestamp="$tmppath/im_timestamp"
+tmp="/tmp/im_files"
 
 for a; do
   case $a in
@@ -18,13 +19,14 @@ msg="\n## %s:\n"
 
 [ -f "$timestamp" ] || touch "$timestamp"
 
-for i in `find "$dir" -mindepth 2 -newer "$timestamp" -name 'out'`; do
+find "$dir" -mindepth 2 -newer "$timestamp" -name 'out' > "$tmp"
+touch "$timestamp"
+
+while read i; do
   # if file doesn't contain server stuff only
   if grep -v -q '\-!\-' $i  > /dev/null 2>&1 ; then
     case $action in
-      open) 
-        im "`dirname "$i"`" 
-        ;;
+      open) im "`dirname "$i"`" ;;
       show)
         codepage='utf-8'
         [ -f "`dirname "$i"`/../rc" ] && . "`dirname "$i"`/../rc"
@@ -35,6 +37,4 @@ for i in `find "$dir" -mindepth 2 -newer "$timestamp" -name 'out'`; do
     esac
     echo "---"
   fi
-done
-
-touch "$timestamp"
+done < "$tmp"
