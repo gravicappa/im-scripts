@@ -3,6 +3,6 @@
 dir="$HOME/mnt/jabber/"
 
 while true; do
-	im_latest -o "$dir"
-	inotifywait -rq -e create,modify "$dir"
+	im_latest -s "$dir"
+	inotifywait -rqq -e create,modify "$dir"
 done
