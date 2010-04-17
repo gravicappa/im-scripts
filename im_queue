@@ -1,6 +1,6 @@
 #!/bin/sh
 
-dir="$HOME/mnt/jabber/"
+dir="$HOME/talk/xmpp/"
 
 while true; do
 	im_latest -s "$dir"

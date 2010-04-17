@@ -1,7 +1,6 @@
 #!/bin/sh
 
-root="$HOME/irc"
-action="open"
+action="show"
 tmppath="/tmp"
 timestamp="$tmppath/im_timestamp"
 tmp="/tmp/im_files"
@@ -13,7 +12,7 @@ for a; do
   esac
 done
 
-dir=${1:-$HOME/irc}
+dir=${1:-$HOME/talk}
 
 msg="\n## %s:\n"
 
@@ -28,11 +27,11 @@ while read i; do
     case $action in
       open) im "`dirname "$i"`" ;;
       show)
-        codepage='utf-8'
-        [ -f "`dirname "$i"`/../rc" ] && . "`dirname "$i"`/../rc"
-        [ -f "`dirname "$i"`/rc" ] && . "`dirname "$i"`/rc"
+        from() { cat; }
+        [ -f "`dirname "$i"`/../rc.conf" ] && . "`dirname "$i"`/../rc.conf"
+        [ -f "`dirname "$i"`/rc.conf" ] && . "`dirname "$i"`/rc.conf"
         printf "$msg" "$i"
-        tail -5 $i | iconv -f $codepage | grep -v -e '-!-'
+        tail -5 $i | from | grep -v -e '-!-'
         ;;
     esac
     echo "---"

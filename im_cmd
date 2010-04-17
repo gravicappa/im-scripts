@@ -3,11 +3,13 @@
 num_lines='10'
 use_color='yes'
 
+from() { cat; }
+to() { cat; }
+
 unset codepage
 for a; do
   case $a in
-    -c) shift; codepage="$1"; shift ;;
-    -h) echo "usage: $0 [-n num_lines] [-c encoding] [--] [dir]"; exit 1 ;;
+    -h) echo "usage: $0 [-n num_lines] [--] [dir]"; exit 1 ;;
     -n) shift; num_lines="$1"; shift ;;
     --) shift; break ;;
   esac
@@ -17,13 +19,8 @@ dir="${@:-.}"
 
 [ -f "$dir/out" ] || { echo "$dir/out: does not exist"; exit 1; } 
 [ -p "$dir/in" ] || { echo "$dir/in: does not exist or not pipe"; exit 1; } 
-[ -f "$dir/../rc" ] && . "$dir/../rc"
-[ -f "$dir/rc" ] && . "$dir/rc"
-
-if [ -n "$codepage" ] ; then
-  iconv_from="| while read s; do echo \"\$s\" | iconv -f $codepage; done"
-  iconv_to="| while read s; do echo \"\$s\" | iconv -t $codepage; done"
-fi
+[ -f "$dir/../rc.conf" ] && . "$dir/../rc.conf"
+[ -f "$dir/rc.conf" ] && . "$dir/rc.conf"
 
 if [ _"$use_color" = _yes ] ; then
   black=`printf '\033[30m'`
@@ -39,7 +36,7 @@ fi
 
 flt="s/^[-0-9]* \([^<]*\)<\([^>]*\)>/${blue}\1${white}<${green}\2${white}>/"
 
-eval "tail -n $num_lines -f '$dir/out' $iconv_from" | sed -e "$flt" &
+tail -n $num_lines -f "$dir/out" | from | sed -e "$flt" &
 pid=$!
 trap "kill $pid" 0
-eval "cat $iconv_to" > "$dir/in"
+to > "$dir/in"
