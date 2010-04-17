@@ -1,6 +1,6 @@
 #!/bin/sh
 
-dir="$HOME/talk/xmpp/"
+dir="$HOME/talk/"
 
 while true; do
 	im_latest -s "$dir"
