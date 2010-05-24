@@ -6,7 +6,6 @@ use_color='yes'
 from() { cat; }
 to() { cat; }
 
-unset codepage
 for a; do
   case $a in
     -h) echo "usage: $0 [-n num_lines] [--] [dir]"; exit 1 ;;
@@ -34,7 +33,8 @@ if [ _"$use_color" = _yes ] ; then
   clear=`printf '\033[1m'`
 fi
 
-flt="s/^[-0-9]* \([^<]*\)<\([^>]*\)>/${blue}\1${white}<${green}\2${white}>/"
+flt="/-!-/ { s/^.*\$/${blue}&${white}/ }
+     s/^[-0-9]* \([0-9:]*\) <\([^>]*\)>/${blue}\1${white} <${green}\2${white}>/;"
 
 tail -n $num_lines -f "$dir/out" | from | sed -e "$flt" &
 pid=$!
