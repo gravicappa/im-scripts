@@ -1,8 +1,0 @@
-#!/bin/sh
-
-dir="$HOME/talk/"
-
-while true; do
-	im_latest -s "$dir"
-	inotifywait -rqq -e create,modify "$dir"
-done

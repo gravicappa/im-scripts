@@ -1,9 +1,9 @@
 #!/bin/sh
 
 action="show"
-tmppath="/tmp"
-timestamp="$tmppath/im_timestamp"
-tmp="/tmp/im_files"
+tmpdir="/tmp/ns.$USER"
+timestamp="$tmpdir/im_timestamp"
+tmp="$tmpdir/im_files"
 
 for a; do
   case $a in
@@ -16,6 +16,7 @@ dir=${1:-$HOME/talk}
 
 msg="\n## %s:\n"
 
+mkdir -p "$tmpdir"
 [ -f "$timestamp" ] || touch "$timestamp"
 
 find "$dir" -mindepth 2 -newer "$timestamp" -name 'out' > "$tmp"

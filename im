@@ -1,2 +1,48 @@
 #!/bin/sh
-exec rlwrap -r -b "(){}[],+=^#;|&%" im_cmd "$@"
+
+num_lines='10'
+use_color='yes'
+
+from() { cat; }
+to() { cat; }
+
+case "$1" in
+  -r) shift ;;
+  *) exec rlwrap -a -s 0 -r -b "(){}[],+=^#;|&%" editwrap -n "$0" -r "$@" ;;
+esac
+
+for a; do
+  case $a in
+    -h) echo "usage: $0 [-n num_lines] [--] [dir]"; exit 1 ;;
+    -n) shift; num_lines="$1"; shift ;;
+    -[0-9]*) num_lines=`echo $1 | sed 's/^-//'`; shift ;;
+    --) shift; break ;;
+  esac
+done
+
+dir="${@:-.}"
+
+[ -f "$dir/out" ] || { echo "$dir/out: does not exist"; exit 1; } 
+[ -p "$dir/in" ] || { echo "$dir/in: does not exist or not pipe"; exit 1; } 
+[ -f "$dir/../rc.conf" ] && . "$dir/../rc.conf"
+[ -f "$dir/rc.conf" ] && . "$dir/rc.conf"
+
+if [ _"$use_color" = _yes ] ; then
+  black=`printf '\033[30m'`
+  red=`printf '\033[31m'`
+  green=`printf '\033[32m'`
+  yellow=`printf '\033[33m'`
+  blue=`printf '\033[34m'`
+  magenta=`printf '\033[35m'`
+  cyan=`printf '\033[36m'`
+  white=`printf '\033[37m'`
+  clear=`printf '\033[0m'`
+fi
+
+flt="/-!-/ { s/^.*\$/${blue}&${clear}/ }
+     s/^[-0-9]* \([0-9:]*\) <\([^>]*\)>/${blue}\1${clear} <${green}\2${clear}>/;"
+
+tail -n $num_lines -f "$dir/out" | from | sed -e "$flt" &
+pid=$!
+trap "kill $pid" 0
+to > "$dir/in"
