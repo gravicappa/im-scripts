@@ -1,40 +1,32 @@
 #!/bin/sh
 
-action="show"
 tmpdir="/tmp/ns.$USER"
 timestamp="$tmpdir/im_timestamp"
-tmp="$tmpdir/im_files"
 
-for a; do
-  case $a in
-    -o) action='open'; shift;;
-    -s) action='show'; shift;;
-  esac
-done
+dir=$HOME/talk
 
-dir=${1:-$HOME/talk}
-
-msg="\n## %s:\n"
+msg_head="\n## %s:\n"
+msg_tail="---"
 
 mkdir -p "$tmpdir"
 [ -f "$timestamp" ] || touch "$timestamp"
+touch "$timestamp.tmp"
 
-find "$dir" -mindepth 2 -newer "$timestamp" -name 'out' > "$tmp"
-touch "$timestamp"
-
-while read i; do
-  # if file doesn't contain server stuff only
-  if grep -v -q '\-!\-' $i  > /dev/null 2>&1 ; then
-    case $action in
-      open) im "`dirname "$i"`" ;;
-      show)
-        from() { cat; }
-        [ -f "`dirname "$i"`/../rc.conf" ] && . "`dirname "$i"`/../rc.conf"
-        [ -f "`dirname "$i"`/rc.conf" ] && . "`dirname "$i"`/rc.conf"
-        printf "$msg" "$i"
-        tail -5 $i | from | grep -v -e '-!-'
-        ;;
-    esac
-    echo "---"
+show() {
+  if [ "$1/out" -nt "$timestamp" ] ; then
+    from() { cat; }
+    [ -f "$1/../rc.conf" ] && . "$1/../rc.conf"
+    [ -f "$1/rc.conf" ] && . "$1/rc.conf"
+    printf "$msg_head" "$1"
+    tail -5 "$1/out" | grep -v -e '-!-' | from
+    printf '%s\n' "$msg_tail"
   fi
-done < "$tmp"
+}
+
+for p in $dir/*/; do
+  show "$p"
+done
+for p in $dir/*/*/; do
+  show "$p"
+done
+mv "$timestamp.tmp" "$timestamp"

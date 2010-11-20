@@ -1,7 +1,6 @@
 #!/bin/sh
 
 num_lines='10'
-use_color='yes'
 
 from() { cat; }
 to() { cat; }
@@ -20,29 +19,27 @@ for a; do
   esac
 done
 
-dir="${@:-.}"
-
-[ -f "$dir/out" ] || { echo "$dir/out: does not exist"; exit 1; } 
-[ -p "$dir/in" ] || { echo "$dir/in: does not exist or not pipe"; exit 1; } 
+dir="${1:-.}"
+[ -f "$dir/out" ] || { echo "$dir/out: does not exist"; exit 1; }
+[ -p "$dir/in" ] || { echo "$dir/in: does not exist or not pipe"; exit 1; }
 [ -f "$dir/../rc.conf" ] && . "$dir/../rc.conf"
 [ -f "$dir/rc.conf" ] && . "$dir/rc.conf"
 
-if [ _"$use_color" = _yes ] ; then
-  black=`printf '\033[30m'`
-  red=`printf '\033[31m'`
-  green=`printf '\033[32m'`
-  yellow=`printf '\033[33m'`
-  blue=`printf '\033[34m'`
-  magenta=`printf '\033[35m'`
-  cyan=`printf '\033[36m'`
-  white=`printf '\033[37m'`
-  clear=`printf '\033[0m'`
-fi
+filter() {
+  awk -F '[ ]' -v 'clear=\033[0m' -v 'bg=\033[34m' -v 'nick=\033[32m' '
+    /-!-/ { printf("%s%s%s\n", bg, $0, clear); next;}
+    /^[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+ </ {
+      sub(/.*/, bg "&" clear, $2);
+      sub(/</, "<" nick);
+      sub(/>/, clear ">");
+      for (i = 2; i <= NF; ++i) printf("%s ", $i);
+      printf("\n");
+      next;
+    }
+    {print;}'
+}
 
-flt="/-!-/ { s/^.*\$/${blue}&${clear}/ }
-     s/^[-0-9]* \([0-9:]*\) <\([^>]*\)>/${blue}\1${clear} <${green}\2${clear}>/;"
-
-tail -n $num_lines -f "$dir/out" | from | sed -e "$flt" &
+tail -n $num_lines -f "$dir/out" | from | filter &
 pid=$!
 trap "kill $pid" 0
 to > "$dir/in"
