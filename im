@@ -1,45 +1,41 @@
 #!/bin/sh
 
 num_lines='10'
-
 from() { cat; }
 to() { cat; }
 
-case "$1" in
-  -r) shift ;;
-  *) exec rlwrap -a -s 0 -r -b "(){}[],+=^#;|&%" editwrap -n "$0" -r "$@" ;;
-esac
+[ "$1" != "-r" ] && exec rlwrap -a -s 0 -r -b "(){}[],+=^#;|&%" "$0" -r "$@"
 
-for a; do
-  case $a in
-    -h) echo "usage: $0 [-n num_lines] [--] [dir]"; exit 1 ;;
-    -n) shift; num_lines="$1"; shift ;;
-    -[0-9]*) num_lines=`echo $1 | sed 's/^-//'`; shift ;;
-    --) shift; break ;;
+while [ $# -gt 0 ] ; do
+  case $1 in
+    -r) shift;;
+    -h) echo "usage: $0 [-n num_lines] [--] [dir]"; exit 1;;
+    -n) shift; num_lines="$1"; shift;;
+    -[0-9]*) num_lines=`echo $1 | sed 's/^-//'`; shift;;
+    *) break;;
   esac
 done
 
 dir="${1:-.}"
+
 [ -f "$dir/out" ] || { echo "$dir/out: does not exist"; exit 1; }
 [ -p "$dir/in" ] || { echo "$dir/in: does not exist or not pipe"; exit 1; }
 [ -f "$dir/../rc.conf" ] && . "$dir/../rc.conf"
 [ -f "$dir/rc.conf" ] && . "$dir/rc.conf"
 
-filter() {
-  awk -F '[ ]' -v 'clear=\033[0m' -v 'bg=\033[34m' -v 'nick=\033[32m' '
-    /-!-/ { printf("%s%s%s\n", bg, $0, clear); next;}
-    /^[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+ </ {
-      sub(/.*/, bg "&" clear, $2);
-      sub(/</, "<" nick);
-      sub(/>/, clear ">");
-      for (i = 2; i <= NF; ++i) printf("%s ", $i);
-      printf("\n");
-      next;
-    }
-    {print;}'
-}
+{
+  tail -n $num_lines -f "$dir/out" | from \
+  | awk -F '[ ]' -v 'clear=\033[0m' -v 'comment=\033[32m' '
+      $3 == "-!-" {printf("%s%s%s\n", comment, $0, clear); next;}
+      /^[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+ </ {
+        $1 = "";
+        sub(/^[ \t]*/, "");
+      }
+      {print;}'
+} &
 
-tail -n $num_lines -f "$dir/out" | from | filter &
 pid=$!
 trap "kill $pid" 0
+stty -echonl -echo
+trap "stty '`stty -g`'" exit
 to > "$dir/in"

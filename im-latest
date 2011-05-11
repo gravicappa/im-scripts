@@ -5,9 +5,6 @@ timestamp="$tmpdir/im_timestamp"
 
 dir=$HOME/talk
 
-msg_head="\n## %s:\n"
-msg_tail="---"
-
 mkdir -p "$tmpdir"
 [ -f "$timestamp" ] || touch "$timestamp"
 touch "$timestamp.tmp"
@@ -17,9 +14,9 @@ show() {
     from() { cat; }
     [ -f "$1/../rc.conf" ] && . "$1/../rc.conf"
     [ -f "$1/rc.conf" ] && . "$1/rc.conf"
-    printf "$msg_head" "$1"
-    tail -5 "$1/out" | grep -v -e '-!-' | from
-    printf '%s\n' "$msg_tail"
+    echo "## $1"
+    tail -5 "$1/out" | awk '$3 != "-!-" {print}' | from
+    echo "$msg_tail"
   fi
 }
 
