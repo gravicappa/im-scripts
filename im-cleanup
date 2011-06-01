@@ -1,6 +1,11 @@
 #!/bin/sh
 dir="$HOME/talk"
 
+if test -n "$1" ; then
+  sed -i '/-!-/d' "$1"
+  exit
+fi
+
 for f in "$dir"/*/*/out; do
 	if [ -f "$f" ] && grep -q -e '-!-' "$f" ; then
 		sed -i '/-!-/d' "$f"

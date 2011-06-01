@@ -15,8 +15,8 @@ show() {
     [ -f "$1/../rc.conf" ] && . "$1/../rc.conf"
     [ -f "$1/rc.conf" ] && . "$1/rc.conf"
     echo "## $1"
-    tail -5 "$1/out" | awk '$3 != "-!-" {print}' | from
-    echo "$msg_tail"
+    tail -3 "$1/out" | awk '$3 != "-!-" {print}' | from
+    echo
   fi
 }
 
