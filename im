@@ -1,6 +1,6 @@
 #!/bin/sh
 
-num_lines='10'
+num_lines=20
 from() { cat; }
 to() { cat; }
 
