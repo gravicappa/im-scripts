@@ -1,6 +1,6 @@
 prefix = /usr/local
 bindir = ${prefix}/bin
-scripts = im im_cmd im_latest im_queue
+scripts = im im-latest im-cleanup
 
 install:
 	mkdir -p ${destdir}${bindir}
